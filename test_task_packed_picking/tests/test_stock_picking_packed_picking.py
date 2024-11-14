@@ -43,7 +43,7 @@ class TestPackedPicking(TransactionCase):
             create_lots=False,
             set_ready=True,
         )
-        self.assertTrue(picking, "Picking was not created.")
+        self.assertTrue(picking.exists(), "Picking was not created.")
         self.assertEqual(
             picking.picking_type_id, self.operation_type, "Incorrect operation type."
         )
@@ -97,7 +97,7 @@ class TestPackedPicking(TransactionCase):
 
         action = wizard.action_create_picking()
         picking = self.env["stock.picking"].browse(action["res_id"])
-        self.assertTrue(picking, "Picking was not created via wizard.")
+        self.assertTrue(picking.exists(), "Picking was not created via wizard.")
         self.assertEqual(
             picking.package_level_ids.package_id.name,
             "Test Package",
