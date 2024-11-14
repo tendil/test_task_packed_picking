@@ -1,5 +1,4 @@
 # License AGPL-3.0 or Later (http://www.gnu.org/licenses/agpl).
-
 {
     "name": "Test Task Packed Picking",
     "version": "16.0.1.0.0",
@@ -9,18 +8,12 @@
     "license": "AGPL-3",
     "website": "https://github.com/tendil/test_task_packed_picking",
     "depends": [
-        "base",
         "stock",
     ],
     "data": [
         "security/ir.model.access.csv",
         "wizards/packed_picking_wizard_views.xml",
     ],
-    "demo": [],
-    "external_dependencies": {
-        "python": [],
-        "bin": [],
-    },
     "maintainers": ["tendil"],
     "repository": "https://github.com/tendil/odoo_packed_picking_module",
     "installable": True,

@@ -5,7 +5,7 @@ custom packing and validation functionality.
 
 import logging
 
-from odoo import api, exceptions, models
+from odoo import _, api, exceptions, models
 
 _logger = logging.getLogger(__name__)
 
@@ -16,15 +16,15 @@ class StockPicking(models.Model):
     @api.model
     def _create_packed_picking(
         self,
-        operation_type: models.Model,
-        stock_move_data: list[tuple[int, float, str]],
-        owner: models.Model = None,
-        location: models.Model = None,
-        location_dest_id: models.Model = None,
-        package_name: str = None,
-        create_lots: bool = False,
-        set_ready: bool = False,
-    ) -> models.Model:
+        operation_type,
+        stock_move_data,
+        owner=None,
+        location=None,
+        location_dest_id=None,
+        package_name=None,
+        create_lots=False,
+        set_ready=False,
+    ):
         """Create a picking and put its product into a a package.
         This is equal to the following sequence:
             - Create a new picking
@@ -66,6 +66,8 @@ class StockPicking(models.Model):
         stock_picking = self.env["stock.picking"].create(picking_vals)
         _logger.info(f"Created new picking with ID {stock_picking.id}")
 
+        error_products = []
+
         # Process each product in the move data
         for product_id, qty_done, serial in stock_move_data:
             try:
@@ -93,9 +95,17 @@ class StockPicking(models.Model):
                 _logger.error(f"Error adding move for product {product_id}: {e}")
                 continue
 
+        # If there were any access errors, raise a single error with details
+        if error_products:
+            raise exceptions.UserError(
+                _(
+                    f"Could not add moves for the following products due "
+                    f"to access errors: {', '.join(map(str, error_products))}"
+                )
+            )
+
         # Confirm the picking and set quantities
         stock_picking.action_confirm()
-        stock_picking.action_set_quantities_to_reservation()
 
         # Package handling
         if package_name:
@@ -104,7 +114,7 @@ class StockPicking(models.Model):
                 {
                     "package_id": package.id,
                     "picking_id": stock_picking.id,
-                    "location_id": location_dest_id.id,
+                    "location_id": location.id,
                     "location_dest_id": location_dest_id.id,
                     "move_line_ids": [(6, 0, stock_picking.move_line_ids.ids)],
                     "company_id": stock_picking.company_id.id,
@@ -113,8 +123,6 @@ class StockPicking(models.Model):
             _logger.info(
                 f"Created package {package_name} for picking {stock_picking.id}"
             )
-        else:
-            stock_picking.action_put_in_pack()
 
         if package_name:
             package = self.env["stock.quant.package"].create({"name": package_name})
