@@ -106,6 +106,7 @@ class StockPicking(models.Model):
 
         # Confirm the picking and set quantities
         stock_picking.action_confirm()
+        stock_picking.action_set_quantities_to_reservation()
 
         # Package handling
         if package_name:
